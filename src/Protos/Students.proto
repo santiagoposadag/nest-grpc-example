@@ -12,6 +12,7 @@ service StudentService {
   rpc LookIfExists(stream StudentId) returns (stream Acknowledge);
 }
 
+
 message Empty{
 
 }

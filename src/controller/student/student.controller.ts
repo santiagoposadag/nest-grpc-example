@@ -1,56 +1,28 @@
 import { Body, Controller, Get, OnModuleInit, Param, Post, UseInterceptors } from '@nestjs/common';
-import { Client, ClientGrpc } from '@nestjs/microservices';
 import { Observable, ReplaySubject, map } from 'rxjs';
-import { ControladorInterceptor } from 'src/controllador.interceptor';
-import { GrpcClienteOpciones } from 'src/grpc-client.options';
-import { Student, StudentService } from 'src/interfaces/student.interfaces';
+import { Student} from '../../interfaces/student.interfaces';
+import { StudentServiceNormal } from './student.service';
 
 @Controller('student')
-@UseInterceptors(new ControladorInterceptor())
-export class StudentController implements OnModuleInit{
+export class StudentController {
 
-    @Client(
-        GrpcClienteOpciones.crearOpciones(
-          'localhost:6565',
-          'students',
-          './Protos/Students.proto',
-        ),
-      )
-      grpcStudentsClient: ClientGrpc;
-      grpcStudentsService: StudentService;
-    
-    
-    
-      constructor() {}
-    
-      onModuleInit() {
-        this.grpcStudentsService = this.grpcStudentsClient.getService('StudentService')
-      }
+  constructor(private service: StudentServiceNormal) {
 
-      @Get('get/all')
-      getAllStudents(){
-        const response:Student[] = []
-        return this.grpcStudentsService.FindAllStudents().pipe(map(student => {
-            response.push(student)
-            return response
-        }));
-      }
-    
-      @Get(':id')
-      getHello(@Param('id') id:number): Observable<Student> {
-        return this.grpcStudentsService.FindStudentById({id});
-      }
+  }
+
+  @Get('get/all')
+  getAllStudents() {
+    return this.service.getAllStudents();
+  }
+
+  @Get(':id')
+  getStudentById(@Param('id') id: number): Observable<Student> {
+    return this.service.findStudentById(id);
+  }
 
 
-      @Post()
-      saveAllStudents(@Body() students:Student[]){
-        const requestObservable = new ReplaySubject<Student>();
-
-        students.forEach(student => {
-            requestObservable.next(student)
-        })
-        requestObservable.complete();
-
-        return this.grpcStudentsService.SaveAllStudents(requestObservable);
-      }
+  @Post()
+  saveAllStudents(@Body() students: Student[]) {
+    return this.service.saveAllStudents(students);
+  }
 }
